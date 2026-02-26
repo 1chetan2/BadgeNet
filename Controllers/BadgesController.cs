@@ -67,6 +67,63 @@ namespace BadgeCraft_Net.Controllers
             {
                 return BadRequest(ex.ToString());
             }
+            /*download pdf*/
+
         }
     }
 }
+/*
+ if first ulpoad csv with template id 22 and then call below two api
+ when i call in swagger
+ https://localhost:7016/api/Csv/22/columns
+[
+  "Name",
+  "Designation",
+  "Department",
+  "PhotoUrl",
+  "QRCode"
+]
+https://localhost:7016/api/Csv/22/mapping
+{
+  "additionalProp1": "string",
+  "additionalProp2": "string",
+  "additionalProp3": "string"
+}
+after i fill manually - https://localhost:7016/api/Csv/22/mapping
+
+{
+  "FullName": "Title",
+  "Department": "Subtitle"
+}
+https://localhost:7016/api/Csv/generate/22
+{
+  "message": "Badges generated successfully",
+  "count": 6,
+  "data": [
+    {
+      "title": "",
+      "subtitle": "IT"
+    },
+    {
+      "title": "",
+      "subtitle": "HR"
+    },
+    {
+      "title": "",
+      "subtitle": "Marketing"
+    },
+    {
+      "title": "",
+      "subtitle": "HR"
+    },
+    {
+      "title": "",
+      "subtitle": "Testing"
+    },
+    {
+      "title": "",
+      "subtitle": "Marketing"
+    }
+  ]
+}--badge generated,i think it is the issue or not
+*/

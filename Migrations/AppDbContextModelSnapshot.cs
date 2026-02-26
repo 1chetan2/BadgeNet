@@ -89,6 +89,32 @@ namespace BadgeCraft_Net.Migrations
                     b.ToTable("BadgeTemplates");
                 });
 
+            modelBuilder.Entity("BadgeCraft_Net.Models.GeneratedDocument", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PdfPath")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UploadJobId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UploadJobId")
+                        .IsUnique();
+
+                    b.ToTable("GeneratedDocuments");
+                });
+
             modelBuilder.Entity("BadgeCraft_Net.Models.Organization", b =>
                 {
                     b.Property<int>("Id")
@@ -140,6 +166,53 @@ namespace BadgeCraft_Net.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("UploadJob", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CsvPath")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MappingJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("OrganizationId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TemplateId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UploadJobs");
+                });
+
+            modelBuilder.Entity("BadgeCraft_Net.Models.GeneratedDocument", b =>
+                {
+                    b.HasOne("UploadJob", null)
+                        .WithOne("GeneratedDocument")
+                        .HasForeignKey("BadgeCraft_Net.Models.GeneratedDocument", "UploadJobId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("BadgeCraft_Net.Models.User", b =>
                 {
                     b.HasOne("BadgeCraft_Net.Models.Organization", "Organization")
@@ -154,6 +227,12 @@ namespace BadgeCraft_Net.Migrations
             modelBuilder.Entity("BadgeCraft_Net.Models.Organization", b =>
                 {
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("UploadJob", b =>
+                {
+                    b.Navigation("GeneratedDocument")
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

@@ -30,7 +30,7 @@ namespace BadgeCraft_Net.Controllers
                 throw new UnauthorizedAccessException("OrganizationId claim missing");
             return int.Parse(orgClaim.Value);
         }
-        
+
 
         //  GET ALL (Admin + User)
         [HttpGet]
@@ -86,7 +86,7 @@ namespace BadgeCraft_Net.Controllers
             await _context.SaveChangesAsync();
             return Ok(template);
         }
-        
+
         //  DELETE (Admin Only)
         [Authorize(Roles = "OrgAdmin")]
         [HttpDelete("{id}")]

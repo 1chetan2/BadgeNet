@@ -6,10 +6,10 @@
         public string Subtitle { get; set; }
         public string BgColor { get; set; }
         public string TextColor { get; set; }
-        
+
         public int OrganizationId { get; set; }
 
         public IFormFile Logo { get; set; }
-       
+
     }
 }

@@ -21,4 +21,4 @@ namespace BadgeCraft_Net.Models
 
         public int CreatedBy { get; set; }
     }
-    }
+}

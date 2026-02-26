@@ -1,4 +1,7 @@
-﻿using BadgeCraft_Net.Models;
+﻿/*in react badgecraft today i have covered generate the pdf for badges using csv
+        * mapped data,added the congiguration layout,format aslso with intigrate  Apis and testing it*/
+
+using BadgeCraft_Net.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace BadgeCraft_Net.Data
@@ -15,5 +18,10 @@ namespace BadgeCraft_Net.Data
 
         public DbSet<Badge> Badges { get; set; }
 
+        public DbSet<UploadJob> UploadJobs { get; set; }
+        public DbSet<GeneratedDocument> GeneratedDocuments { get; set; }
+       
+
     }
+
 }
