@@ -30,33 +30,28 @@ namespace BadgeCraft_Net.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("BgColor")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("BadgeTemplateId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("CreatedBy")
                         .HasColumnType("int");
 
-                    b.Property<string>("ImageUrl")
+                    b.Property<string>("DataJson")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("OrganizationId")
                         .HasColumnType("int");
 
-                    b.Property<string>("Subtitle")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TextColor")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
+                    b.Property<string>("PdfPath")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BadgeTemplateId");
 
                     b.ToTable("Badges");
                 });
@@ -69,24 +64,94 @@ namespace BadgeCraft_Net.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("Background")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
-                    b.Property<string>("ImageUrl")
+                    b.Property<decimal>("BadgeHeight")
+                        .HasColumnType("decimal(6,2)");
+
+                    b.Property<decimal>("BadgeWidth")
+                        .HasColumnType("decimal(6,2)");
+
+                    b.Property<int>("BadgesPerPage")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<int>("OrganizationId")
                         .HasColumnType("int");
 
-                    b.Property<string>("Title")
+                    b.Property<string>("PageSize")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("OrganizationId");
+
                     b.ToTable("BadgeTemplates");
+                });
+
+            modelBuilder.Entity("BadgeCraft_Net.Models.BadgeTemplateField", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BadgeTemplateId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DefaultValue")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Height")
+                        .HasColumnType("decimal(6,2)");
+
+                    b.Property<bool>("IsRequired")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("StyleJson")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal>("Width")
+                        .HasColumnType("decimal(6,2)");
+
+                    b.Property<decimal>("X")
+                        .HasColumnType("decimal(6,2)");
+
+                    b.Property<decimal>("Y")
+                        .HasColumnType("decimal(6,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BadgeTemplateId");
+
+                    b.ToTable("BadgeTemplateFields");
                 });
 
             modelBuilder.Entity("BadgeCraft_Net.Models.GeneratedDocument", b =>
@@ -100,14 +165,19 @@ namespace BadgeCraft_Net.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("PdfPath")
+                    b.Property<string>("FilePath")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("OrganizationId")
+                        .HasColumnType("int");
 
                     b.Property<int>("UploadJobId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
 
                     b.HasIndex("UploadJobId")
                         .IsUnique();
@@ -128,45 +198,15 @@ namespace BadgeCraft_Net.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.HasKey("Id");
 
                     b.ToTable("Organizations");
                 });
 
-            modelBuilder.Entity("BadgeCraft_Net.Models.User", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("OrganizationId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("PasswordHash")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OrganizationId");
-
-                    b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("UploadJob", b =>
+            modelBuilder.Entity("BadgeCraft_Net.Models.UploadJob", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -201,16 +241,107 @@ namespace BadgeCraft_Net.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("TemplateId");
+
                     b.ToTable("UploadJobs");
+                });
+
+            modelBuilder.Entity("BadgeCraft_Net.Models.User", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("OrganizationId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("BadgeCraft_Net.Models.Badge", b =>
+                {
+                    b.HasOne("BadgeCraft_Net.Models.BadgeTemplate", "BadgeTemplate")
+                        .WithMany()
+                        .HasForeignKey("BadgeTemplateId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("BadgeTemplate");
+                });
+
+            modelBuilder.Entity("BadgeCraft_Net.Models.BadgeTemplate", b =>
+                {
+                    b.HasOne("BadgeCraft_Net.Models.Organization", "Organization")
+                        .WithMany("BadgeTemplates")
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Organization");
+                });
+
+            modelBuilder.Entity("BadgeCraft_Net.Models.BadgeTemplateField", b =>
+                {
+                    b.HasOne("BadgeCraft_Net.Models.BadgeTemplate", "BadgeTemplate")
+                        .WithMany("Fields")
+                        .HasForeignKey("BadgeTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BadgeTemplate");
                 });
 
             modelBuilder.Entity("BadgeCraft_Net.Models.GeneratedDocument", b =>
                 {
-                    b.HasOne("UploadJob", null)
+                    b.HasOne("BadgeCraft_Net.Models.Organization", null)
+                        .WithMany("GeneratedDocuments")
+                        .HasForeignKey("OrganizationId");
+
+                    b.HasOne("BadgeCraft_Net.Models.UploadJob", "UploadJob")
                         .WithOne("GeneratedDocument")
                         .HasForeignKey("BadgeCraft_Net.Models.GeneratedDocument", "UploadJobId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("UploadJob");
+                });
+
+            modelBuilder.Entity("BadgeCraft_Net.Models.UploadJob", b =>
+                {
+                    b.HasOne("BadgeCraft_Net.Models.Organization", null)
+                        .WithMany("UploadJobs")
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BadgeCraft_Net.Models.BadgeTemplate", "Template")
+                        .WithMany()
+                        .HasForeignKey("TemplateId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Template");
                 });
 
             modelBuilder.Entity("BadgeCraft_Net.Models.User", b =>
@@ -224,15 +355,25 @@ namespace BadgeCraft_Net.Migrations
                     b.Navigation("Organization");
                 });
 
+            modelBuilder.Entity("BadgeCraft_Net.Models.BadgeTemplate", b =>
+                {
+                    b.Navigation("Fields");
+                });
+
             modelBuilder.Entity("BadgeCraft_Net.Models.Organization", b =>
                 {
+                    b.Navigation("BadgeTemplates");
+
+                    b.Navigation("GeneratedDocuments");
+
+                    b.Navigation("UploadJobs");
+
                     b.Navigation("Users");
                 });
 
-            modelBuilder.Entity("UploadJob", b =>
+            modelBuilder.Entity("BadgeCraft_Net.Models.UploadJob", b =>
                 {
-                    b.Navigation("GeneratedDocument")
-                        .IsRequired();
+                    b.Navigation("GeneratedDocument");
                 });
 #pragma warning restore 612, 618
         }

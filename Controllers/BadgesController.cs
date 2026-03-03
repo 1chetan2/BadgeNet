@@ -1,10 +1,8 @@
 ﻿using BadgeCraft_Net.Data;
-using BadgeCraft_Net.DTOs;
 using BadgeCraft_Net.Models;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
 
 namespace BadgeCraft_Net.Controllers
 {
@@ -20,110 +18,29 @@ namespace BadgeCraft_Net.Controllers
             _context = context;
         }
 
-        [HttpPost]
-        public async Task<IActionResult> CreateBadge([FromForm] BadgeCreateDto dto)
+        private int GetOrgId()
         {
-            try
-            {
-                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var claim = User.Claims.FirstOrDefault(c => c.Type == "OrganizationId");
+            if (claim == null)
+                throw new UnauthorizedAccessException("OrganizationId missing");
 
-                string imagePath = null;
+            return int.Parse(claim.Value);
+        }
 
-                if (dto.Logo != null)
-                {
-                    var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images");
+        // Get Template for Editor Preview
+        [HttpGet("template/{templateId}")]
+        public async Task<IActionResult> GetTemplate(int templateId)
+        {
+            var orgId = GetOrgId();
 
-                    if (!Directory.Exists(folderPath))
-                        Directory.CreateDirectory(folderPath);
+            var template = await _context.BadgeTemplates
+                .Include(t => t.Fields)
+                .FirstOrDefaultAsync(t => t.Id == templateId && t.OrganizationId == orgId);
 
-                    var fileName = Guid.NewGuid().ToString() + Path.GetExtension(dto.Logo.FileName);
-                    var fullPath = Path.Combine(folderPath, fileName);
+            if (template == null)
+                return NotFound();
 
-                    using (var stream = new FileStream(fullPath, FileMode.Create))
-                    {
-                        await dto.Logo.CopyToAsync(stream);
-                    }
-
-                    imagePath = "/images/" + fileName;
-                }
-
-                var badge = new Badge
-                {
-                    Title = dto.Title,
-                    Subtitle = dto.Subtitle,
-                    BgColor = dto.BgColor,
-                    TextColor = dto.TextColor,
-                    ImageUrl = imagePath,
-                    OrganizationId = dto.OrganizationId,
-                    CreatedBy = userId
-                };
-
-                _context.Badges.Add(badge);
-                await _context.SaveChangesAsync();
-
-                return Ok(badge);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.ToString());
-            }
-            /*download pdf*/
-
+            return Ok(template);
         }
     }
 }
-/*
- if first ulpoad csv with template id 22 and then call below two api
- when i call in swagger
- https://localhost:7016/api/Csv/22/columns
-[
-  "Name",
-  "Designation",
-  "Department",
-  "PhotoUrl",
-  "QRCode"
-]
-https://localhost:7016/api/Csv/22/mapping
-{
-  "additionalProp1": "string",
-  "additionalProp2": "string",
-  "additionalProp3": "string"
-}
-after i fill manually - https://localhost:7016/api/Csv/22/mapping
-
-{
-  "FullName": "Title",
-  "Department": "Subtitle"
-}
-https://localhost:7016/api/Csv/generate/22
-{
-  "message": "Badges generated successfully",
-  "count": 6,
-  "data": [
-    {
-      "title": "",
-      "subtitle": "IT"
-    },
-    {
-      "title": "",
-      "subtitle": "HR"
-    },
-    {
-      "title": "",
-      "subtitle": "Marketing"
-    },
-    {
-      "title": "",
-      "subtitle": "HR"
-    },
-    {
-      "title": "",
-      "subtitle": "Testing"
-    },
-    {
-      "title": "",
-      "subtitle": "Marketing"
-    }
-  ]
-}--badge generated,i think it is the issue or not
-*/

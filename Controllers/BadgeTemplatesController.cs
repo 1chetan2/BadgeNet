@@ -2,12 +2,10 @@
 using BadgeCraft_Net.DTOs;
 using BadgeCraft_Net.Models;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace BadgeCraft_Net.Controllers
-
 {
     [Authorize]
     [Route("api/[controller]")]
@@ -23,29 +21,50 @@ namespace BadgeCraft_Net.Controllers
 
         private int GetOrgId()
         {
-            var orgClaim = User.Claims
-                .FirstOrDefault(c => c.Type == "OrganizationId");
+            var claim = User.Claims.FirstOrDefault(c => c.Type == "OrganizationId");
+            if (claim == null)
+                throw new UnauthorizedAccessException("OrganizationId missing");
 
-            if (orgClaim == null)
-                throw new UnauthorizedAccessException("OrganizationId claim missing");
-            return int.Parse(orgClaim.Value);
+            return int.Parse(claim.Value);
         }
 
-
-        //  GET ALL (Admin + User)
+        // =========================
+        // GET ALL Templates
+        // =========================
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
             var orgId = GetOrgId();
 
             var templates = await _context.BadgeTemplates
+                .Include(t => t.Fields)
                 .Where(t => t.OrganizationId == orgId)
                 .ToListAsync();
 
             return Ok(templates);
         }
 
-        //  CREATE (Admin Only)
+        // =========================
+        // GET SINGLE Template
+        // =========================
+        [HttpGet("{id}")]
+        public async Task<IActionResult> Get(int id)
+        {
+            var orgId = GetOrgId();
+
+            var template = await _context.BadgeTemplates
+                .Include(t => t.Fields)
+                .FirstOrDefaultAsync(t => t.Id == id && t.OrganizationId == orgId);
+
+            if (template == null)
+                return NotFound();
+
+            return Ok(template);
+        }
+
+        // =========================
+        // CREATE Template + Fields
+        // =========================
         [Authorize(Roles = "OrgAdmin")]
         [HttpPost]
         public async Task<IActionResult> Create(CreateBadgeTemplateDto dto)
@@ -54,40 +73,108 @@ namespace BadgeCraft_Net.Controllers
 
             var template = new BadgeTemplate
             {
-                Title = dto.Title,
-                Description = dto.Description,
-                ImageUrl = dto.ImageUrl,
+                Name = dto.Name,
+                Status = dto.Status,
+                PageSize = dto.PageSize,
+                BadgesPerPage = dto.BadgesPerPage,
+                BadgeWidth = dto.BadgeWidth,
+                BadgeHeight = dto.BadgeHeight,
+                Background = dto.Background,
                 OrganizationId = orgId
             };
 
             _context.BadgeTemplates.Add(template);
             await _context.SaveChangesAsync();
-            return Ok(template);
+
+            // Save Fields
+            if (dto.Fields != null && dto.Fields.Any())
+            {
+                var fields = dto.Fields.Select(f => new BadgeTemplateField
+                {
+                    BadgeTemplateId = template.Id,
+                    Type = f.Type,
+                    Key = f.Key,
+                    X = f.X,
+                    Y = f.Y,
+                    Width = f.Width,
+                    Height = f.Height,
+                    StyleJson = f.StyleJson,
+                    IsRequired = f.IsRequired,
+                    DefaultValue = f.DefaultValue
+                }).ToList();
+
+                _context.BadgeTemplateFields.AddRange(fields);
+                await _context.SaveChangesAsync();
+            }
+
+            // Return with fields
+            var createdTemplate = await _context.BadgeTemplates
+                .Include(t => t.Fields)
+                .FirstAsync(t => t.Id == template.Id);
+
+            return Ok(createdTemplate);
         }
 
-        // UPDATE (Admin Only)
+        // =========================
+        // UPDATE Template + Fields
+        // =========================
         [Authorize(Roles = "OrgAdmin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, UpdateBadgeTemplateDto dto)
         {
             var orgId = GetOrgId();
+
             var template = await _context.BadgeTemplates
-                .FirstOrDefaultAsync(t =>
-                    t.Id == id &&
-                    t.OrganizationId == orgId);
+                .Include(t => t.Fields)
+                .FirstOrDefaultAsync(t => t.Id == id && t.OrganizationId == orgId);
 
             if (template == null)
                 return NotFound();
 
-            template.Title = dto.Title;
-            template.Description = dto.Description;
-            template.ImageUrl = dto.ImageUrl;
+            // Update Template
+            template.Name = dto.Name;
+            template.Status = dto.Status;
+            template.PageSize = dto.PageSize;
+            template.BadgesPerPage = dto.BadgesPerPage;
+            template.BadgeWidth = dto.BadgeWidth;
+            template.BadgeHeight = dto.BadgeHeight;
+            template.Background = dto.Background;
+
+            // Remove old fields
+            _context.BadgeTemplateFields.RemoveRange(template.Fields);
+
+            // Add new fields
+            if (dto.Fields != null && dto.Fields.Any())
+            {
+                var newFields = dto.Fields.Select(f => new BadgeTemplateField
+                {
+                    BadgeTemplateId = template.Id,
+                    Type = f.Type,
+                    Key = f.Key,
+                    X = f.X,
+                    Y = f.Y,
+                    Width = f.Width,
+                    Height = f.Height,
+                    StyleJson = f.StyleJson,
+                    IsRequired = f.IsRequired,
+                    DefaultValue = f.DefaultValue
+                }).ToList();
+
+                _context.BadgeTemplateFields.AddRange(newFields);
+            }
 
             await _context.SaveChangesAsync();
-            return Ok(template);
+
+            var updatedTemplate = await _context.BadgeTemplates
+                .Include(t => t.Fields)
+                .FirstAsync(t => t.Id == id);
+
+            return Ok(updatedTemplate);
         }
 
-        //  DELETE (Admin Only)
+        // =========================
+        // DELETE Template
+        // =========================
         [Authorize(Roles = "OrgAdmin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
@@ -95,17 +182,18 @@ namespace BadgeCraft_Net.Controllers
             var orgId = GetOrgId();
 
             var template = await _context.BadgeTemplates
-                .FirstOrDefaultAsync(t =>
-                    t.Id == id &&
-                    t.OrganizationId == orgId);
+                .Include(t => t.Fields)
+                .FirstOrDefaultAsync(t => t.Id == id && t.OrganizationId == orgId);
 
             if (template == null)
                 return NotFound();
 
+            _context.BadgeTemplateFields.RemoveRange(template.Fields);
             _context.BadgeTemplates.Remove(template);
+
             await _context.SaveChangesAsync();
 
-            return Ok();
+            return Ok(new { message = "Template deleted successfully" });
         }
     }
 }

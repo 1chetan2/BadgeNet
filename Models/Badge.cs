@@ -1,24 +1,30 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BadgeCraft_Net.Models
 {
     public class Badge
     {
+        [Key]
         public int Id { get; set; }
 
         [Required]
-        public string Title { get; set; }
+        public int BadgeTemplateId { get; set; }
 
-        public string Subtitle { get; set; }
+        [ForeignKey("BadgeTemplateId")]
+        public BadgeTemplate BadgeTemplate { get; set; } = null!;
 
-        public string BgColor { get; set; }
+        [Required]
+        public string DataJson { get; set; } = "{}";
 
-        public string TextColor { get; set; }
-
-        public string ImageUrl { get; set; }
-
+        [Required]
         public int OrganizationId { get; set; }
 
         public int CreatedBy { get; set; }
+
+        public string? PdfPath { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }
