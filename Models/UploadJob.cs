@@ -19,7 +19,8 @@ namespace BadgeCraft_Net.Models
 
         public string? ErrorMessage { get; set; }
 
-        public DateTime CreatedAt { get; set; }
+        //public DateTime CreatedAt { get; set; }
+        public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
         public int CreatedBy { get; set; }
 

@@ -176,7 +176,7 @@ public class UsersController : ControllerBase
             .FirstOrDefault(c => c.Type == "email")?.Value;
     }
 
-    // ✅ GET USERS
+    //  GET USERS
     [HttpGet]
     public async Task<IActionResult> GetUsers()
     {
@@ -194,7 +194,7 @@ public class UsersController : ControllerBase
             return Ok(users);
         }
 
-        // 🔒 OrgUser → Only Self
+        //  OrgUser → Only Self
         var selfUser = await _context.Users
             .Where(u => u.OrganizationId == orgId && u.Email == email)
             .Select(u => new { u.Id, u.Email, u.Role })
@@ -203,7 +203,7 @@ public class UsersController : ControllerBase
         return Ok(selfUser);
     }
 
-    // ✅ CREATE USER (Admin Only)
+    // CREATE USER (Admin Only)
     [Authorize(Roles = "OrgAdmin")]
     [HttpPost]
     public async Task<IActionResult> Create(CreateUserDto dto)
@@ -224,7 +224,29 @@ public class UsersController : ControllerBase
         return Ok(new { user.Id, user.Email, user.Role });
     }
 
-    // ✅ UPDATE USER (Admin Only)
+    // GET USER BY ID
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetUserById(int id)
+    {
+        var orgId = GetOrgId();
+
+        var user = await _context.Users
+            .Where(u => u.Id == id && u.OrganizationId == orgId)
+            .Select(u => new
+            {
+                u.Id,
+                u.Email,
+                u.Role
+            })
+            .FirstOrDefaultAsync();
+
+        if (user == null)
+            return NotFound();
+
+        return Ok(user);
+    }
+
+    // UPDATE USER (Admin Only)
     [Authorize(Roles = "OrgAdmin")]
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, UpdateUserDto dto)
@@ -247,7 +269,7 @@ public class UsersController : ControllerBase
         return Ok();
     }
 
-    // ✅ DELETE USER (Admin Only)
+    // DELETE USER (Admin Only)
     [Authorize(Roles = "OrgAdmin")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
