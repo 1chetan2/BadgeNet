@@ -5,6 +5,8 @@ using BadgeCraft_Net.Models;
 using System.Text.Json;
 using System.Globalization;
 using QRCoder;
+using System.Net.Http;
+
 
 public class BadgePdfService
 {
@@ -79,17 +81,15 @@ public class BadgePdfService
                                 {
                                     try
                                     {
-                                        var bgPath = template.Background;
-                                        if (!Path.IsPathRooted(bgPath))
-                                            bgPath = Path.Combine(webRoot, bgPath.TrimStart('/'));
-
-                                        if (File.Exists(bgPath))
+                                        byte[]? bgData = LoadImageData(template.Background, webRoot);
+                                        if (bgData != null)
                                         {
-                                            layers.Layer().Image(bgPath).FitArea();
+                                            layers.Layer().Image(bgData).FitArea();
                                         }
                                         else
                                         {
-                                            Console.WriteLine($"DEBUG: Background NOT FOUND at: {bgPath}");
+                                            // Maybe it's a color hex? 
+                                            // QuestPDF handles colors in layers.Layer().Background(color)
                                         }
                                     }
                                     catch (Exception ex)
@@ -180,27 +180,14 @@ public class BadgePdfService
                                         {
                                             try
                                             {
-                                                var imgPath = value;
-                                                // If path is not absolute, try combining with webRoot
-                                                if (!Path.IsPathRooted(imgPath))
-                                                    imgPath = Path.Combine(webRoot, imgPath.TrimStart('/'));
-
-                                                if (File.Exists(imgPath))
+                                                byte[]? imageData = LoadImageData(value, webRoot);
+                                                if (imageData != null)
                                                 {
-                                                    layer.Image(imgPath).FitArea();
+                                                    layer.Image(imageData).FitArea();
                                                 }
                                                 else
                                                 {
-                                                    // Fallback check if it was intended to be in CurrentDirectory/Uploads
-                                                    var fallbackPath = Path.Combine(Directory.GetCurrentDirectory(), value.TrimStart('/'));
-                                                    if (File.Exists(fallbackPath))
-                                                    {
-                                                        layer.Image(fallbackPath).FitArea();
-                                                    }
-                                                    else
-                                                    {
-                                                        Console.WriteLine($"DEBUG: Image NOT FOUND at: {imgPath} OR {fallbackPath}");
-                                                    }
+                                                    Console.WriteLine($"DEBUG: Image NOT FOUND or could not be loaded: {value}");
                                                 }
                                             }
                                             catch (Exception ex)
@@ -230,6 +217,51 @@ public class BadgePdfService
         }).GeneratePdf(filePath);
 
         return filePath;
+    }
+
+    private byte[]? LoadImageData(string path, string webRoot)
+    {
+        if (string.IsNullOrEmpty(path)) return null;
+
+        path = path.Trim('\"', ' ');
+
+        try
+        {
+            // 1. Handle URLs
+            if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || 
+                path.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                using var client = new HttpClient();
+                // We use .GetAwaiter().GetResult() because QuestPDF's document generation is typically synchronous
+                return client.GetByteArrayAsync(path).GetAwaiter().GetResult();
+            }
+
+            // 2. Handle Absolute Paths
+            if (Path.IsPathRooted(path) && File.Exists(path))
+            {
+                return File.ReadAllBytes(path);
+            }
+
+            // 3. Handle Relative Paths (against WebRoot)
+            var webRootPath = Path.Combine(webRoot, path.TrimStart('/'));
+            if (File.Exists(webRootPath))
+            {
+                return File.ReadAllBytes(webRootPath);
+            }
+
+            // 4. Handle Relative Paths (against CurrentDirectory)
+            var localPath = Path.Combine(Directory.GetCurrentDirectory(), path.TrimStart('/'));
+            if (File.Exists(localPath))
+            {
+                return File.ReadAllBytes(localPath);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"ERROR in LoadImageData for '{path}': {ex.Message}");
+        }
+
+        return null;
     }
 }
 

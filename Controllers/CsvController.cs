@@ -470,7 +470,7 @@ namespace BadgeCraft_Net.Controllers
                     j.Id,
                     TemplateName = j.Template.Name,
                     j.Status,
-                    CreatedAt = j.CreatedAt.ToString("yyyy-MM-dd HH:mm"),
+                    CreatedAt = j.CreatedAt, // Return DateTime object for ISO 8601 serialization
                     PdfFile = j.GeneratedDocument != null ? j.GeneratedDocument.FilePath : null,
                     j.ErrorMessage
                 })
@@ -485,7 +485,7 @@ namespace BadgeCraft_Net.Controllers
         [AllowAnonymous]
         [HttpGet("{jobId}/download")]
         [HttpGet("/api/jobs/{jobId}/download")]
-        public async Task<IActionResult> DownloadPdf(int jobId)
+        public async Task<IActionResult> DownloadPdf(int jobId, [FromQuery] bool inline = false)
         {
             var job = await _context.UploadJobs
                 .Include(j => j.GeneratedDocument)
@@ -493,19 +493,28 @@ namespace BadgeCraft_Net.Controllers
 
             if (job == null)
             {
-                Console.WriteLine($"DOWNLOAD ERROR: Job {jobId} not found.");
                 return NotFound("Job not found");
             }
 
             if (job.GeneratedDocument == null)
             {
-                Console.WriteLine($"DOWNLOAD ERROR: Job {jobId} has no GeneratedDocument record.");
                 return NotFound("PDF not found");
             }
 
             var filePath = job.GeneratedDocument.FilePath;
+            if (!System.IO.File.Exists(filePath))
+            {
+                return NotFound("Physical PDF file not found on server.");
+            }
+
             var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
             var fileName = Path.GetFileName(filePath);
+
+            if (inline)
+            {
+                // Return inline for previewers
+                return File(fileBytes, "application/pdf");
+            }
 
             return File(fileBytes, "application/pdf", fileName);
         }
