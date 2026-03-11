@@ -38,8 +38,8 @@ public class BadgePdfService
             throw new Exception("No records provided for PDF generation.");
         }
 
-        var badgeWidth = (float)template.BadgeWidth > 10 ? (float)template.BadgeWidth : 85f; // Fallback to CR80 width
-        var badgeHeight = (float)template.BadgeHeight > 10 ? (float)template.BadgeHeight : 54f; // Fallback to CR80 height
+        var badgeWidth = (float)template.BadgeWidth > 10 ? (float)template.BadgeWidth : 85f; 
+        var badgeHeight = (float)template.BadgeHeight > 10 ? (float)template.BadgeHeight : 54f; 
 
         Document.Create(container =>
         {
@@ -187,7 +187,7 @@ public class BadgePdfService
                                                 }
                                                 else
                                                 {
-                                                    Console.WriteLine($"DEBUG: Image NOT FOUND or could not be loaded: {value}");
+                                                    Console.WriteLine($"DEBUG: Image not found or could not be loaded: {value}");
                                                 }
                                             }
                                             catch (Exception ex)
@@ -242,14 +242,14 @@ public class BadgePdfService
                 return File.ReadAllBytes(path);
             }
 
-            // 3. Handle Relative Paths (against WebRoot)
+            // 3. Handle Relative Paths - against WebRoot
             var webRootPath = Path.Combine(webRoot, path.TrimStart('/'));
             if (File.Exists(webRootPath))
             {
                 return File.ReadAllBytes(webRootPath);
             }
 
-            // 4. Handle Relative Paths (against CurrentDirectory)
+            // 4. Handle Relative Paths - against CurrentDirectory
             var localPath = Path.Combine(Directory.GetCurrentDirectory(), path.TrimStart('/'));
             if (File.Exists(localPath))
             {

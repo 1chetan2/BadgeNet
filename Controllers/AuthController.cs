@@ -59,7 +59,7 @@ namespace BadgeCraft_Net.Controllers
                 return Unauthorized();
 
             if (!user.IsGranted)
-                return Unauthorized(new { message = "Your account access has not been granted. Please contact your administrator." });
+                return Unauthorized(new { message = "Your account access has not allowed" });
 
             var token = _jwt.GenerateToken(user);   
 
