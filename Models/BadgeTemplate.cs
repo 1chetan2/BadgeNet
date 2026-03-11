@@ -37,9 +37,9 @@ namespace BadgeCraft_Net.Models
         public decimal BadgeHeight { get; set; } 
 
         [StringLength(500)]
-        public string? Background { get; set; }  // color hex or image URL/path
+        public string? Background { get; set; }  
 
-        // Tenant isolation (mandatory)
+        // Tenant isolation
         [Required]
         public int OrganizationId { get; set; }
 

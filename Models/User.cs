@@ -6,6 +6,7 @@ namespace BadgeCraft_Net.Models
     public class User
     {
         public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Email is required")]
         [EmailAddress(ErrorMessage = "Invalid email format")]
@@ -27,5 +28,9 @@ namespace BadgeCraft_Net.Models
         [RegularExpression("OrgUser|OrgAdmin|User",
             ErrorMessage = "Role must be OrgUser, OrgAdmin or User")]
         public string Role { get; set; } = "OrgUser";
+
+        public bool IsGranted { get; set; } = true;
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

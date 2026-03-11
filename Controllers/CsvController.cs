@@ -67,6 +67,9 @@ namespace BadgeCraft_Net.Controllers
             if (template == null)
                 return BadRequest("Invalid TemplateId or not authorized");
 
+            if (template.Status != "Published")
+                return BadRequest("Template must be 'Published' to be used for badge generation.");
+
             var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "Uploads");
             if (!Directory.Exists(uploadsFolder))
                 Directory.CreateDirectory(uploadsFolder);

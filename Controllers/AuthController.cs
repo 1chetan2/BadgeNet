@@ -26,7 +26,7 @@ namespace BadgeCraft_Net.Controllers
         public async Task<IActionResult> Register(RegisterDto dto)
         {                                                           
             if (_context.Users.Any(x => x.Email == dto.Email))
-                return BadRequest("Email already exists");
+                return BadRequest(new { message = "Email already exists" });
                                                                                                                                            
             var org = new Organization { Name = dto.OrganizationName };     
             _context.Organizations.Add(org);                                    
@@ -34,6 +34,7 @@ namespace BadgeCraft_Net.Controllers
                                                                                                   
             var user = new User
             {                                                                 
+                Name = dto.Name,
                 Email = dto.Email,                               
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),                                      
                 OrganizationId = org.Id,
@@ -43,7 +44,7 @@ namespace BadgeCraft_Net.Controllers
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            return Ok("Registered successfully");
+            return Ok(new { message = "Registered successfully" });
         }
 
         [HttpPost("login")]
@@ -56,6 +57,9 @@ namespace BadgeCraft_Net.Controllers
 
             if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))     
                 return Unauthorized();
+
+            if (!user.IsGranted)
+                return Unauthorized(new { message = "Your account access has not been granted. Please contact your administrator." });
 
             var token = _jwt.GenerateToken(user);   
 

@@ -188,7 +188,7 @@ public class UsersController : ControllerBase
         {
             var users = await _context.Users
                 .Where(u => u.OrganizationId == orgId)
-                .Select(u => new { u.Id, u.Email, u.Role })
+                .Select(u => new { id = u.Id, name = u.Name, email = u.Email, role = u.Role, isGranted = u.IsGranted, createdAt = u.CreatedAt })
                 .ToListAsync();
 
             return Ok(users);
@@ -197,7 +197,7 @@ public class UsersController : ControllerBase
         //  OrgUser → Only Self
         var selfUser = await _context.Users
             .Where(u => u.OrganizationId == orgId && u.Email == email)
-            .Select(u => new { u.Id, u.Email, u.Role })
+            .Select(u => new { id = u.Id, email = u.Email, role = u.Role, isGranted = u.IsGranted, createdAt = u.CreatedAt })
             .ToListAsync();
 
         return Ok(selfUser);
@@ -212,16 +212,18 @@ public class UsersController : ControllerBase
 
         var user = new User
         {
+            Name = dto.Name,
             Email = dto.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
             Role = dto.Role,
-            OrganizationId = orgId
+            OrganizationId = orgId,
+            IsGranted = dto.IsGranted
         };
 
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
-        return Ok(new { user.Id, user.Email, user.Role });
+        return Ok(new { id = user.Id, name = user.Name, email = user.Email, role = user.Role, isGranted = user.IsGranted, createdAt = user.CreatedAt });
     }
 
     // GET USER BY ID
@@ -234,9 +236,12 @@ public class UsersController : ControllerBase
             .Where(u => u.Id == id && u.OrganizationId == orgId)
             .Select(u => new
             {
-                u.Id,
-                u.Email,
-                u.Role
+                id = u.Id,
+                name = u.Name,
+                email = u.Email,
+                role = u.Role,
+                isGranted = u.IsGranted,
+                createdAt = u.CreatedAt
             })
             .FirstOrDefaultAsync();
 
@@ -261,8 +266,10 @@ public class UsersController : ControllerBase
         if (user == null)
             return NotFound();
 
+        user.Name = dto.Name;
         user.Email = dto.Email;
         user.Role = dto.Role;
+        user.IsGranted = dto.IsGranted;
 
         await _context.SaveChangesAsync();
 
